@@ -1,46 +1,70 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 /**
- * SignUpForm
- * - simple client-side validation (password match, length)
- * - uses mockSignUp for demo
- * Replace mockSignUp with real POST /api/auth/signup
+ * SignUpForm (axios version)
+ * - Sends POST /api/auth/register with { name, email, password }
+ * - Uses axios to handle network and server validation errors
+ * - Redirects to /signin on success
  */
 
-async function mockSignUp({ name, email, password }) {
-  await new Promise((r) => setTimeout(r, 900));
-  if (!name || !email || !password) throw new Error("Missing fields");
-  if (password.length < 6) throw new Error("Password must be at least 6 characters");
-  // demo: pretend registration succeeded
-  return { id: "user_demo_123", name, email };
-}
+// If backend is on another port (e.g. 5000), change this:
+const API_BASE = "http://localhost:5000";
+
 
 export default function SignUpForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState("");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setFieldErrors({});
 
     if (password !== confirm) {
       setError("Passwords do not match");
       return;
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const res = await mockSignUp({ name: name.trim(), email: email.trim(), password });
-      setSuccess("Account created. Redirecting to sign-in...");
-      setTimeout(() => (window.location.href = "/signin"), 900);
+      const response = await axios.post(`${API_BASE}/api/auth/register`, {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        confirmPassword: confirm,
+
+      });
+
+      // success
+      setSuccess("Account created successfully! Redirecting to sign-in...");
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 900);
+
     } catch (err) {
-      setError(err.message || "Sign up failed");
+      // Extract backend error
+      if (err.response?.data) {
+        const data = err.response.data;
+        setError(data.message || data.error || "Registration failed");
+        setFieldErrors(data.errors || data.fieldErrors || {});
+      } else {
+        setError("Network error — could not reach server");
+      }
     } finally {
       setLoading(false);
     }
@@ -48,6 +72,7 @@ export default function SignUpForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
+
       {error && <div className="text-sm text-red-600">{error}</div>}
       {success && <div className="text-sm text-green-600">{success}</div>}
 
@@ -58,12 +83,16 @@ export default function SignUpForm() {
         <input
           type="text"
           value={name}
+          name="name"
           onChange={(e) => setName(e.target.value)}
           required
           className="mt-1 w-full px-4 py-3 rounded-xl border"
           style={{ borderColor: "var(--accent-200)", background: "var(--surface)" }}
           placeholder="Jane Doe"
         />
+        {fieldErrors.name && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.name}</p>
+        )}
       </div>
 
       <div>
@@ -73,12 +102,16 @@ export default function SignUpForm() {
         <input
           type="email"
           value={email}
+          name="email"
           onChange={(e) => setEmail(e.target.value)}
           required
           className="mt-1 w-full px-4 py-3 rounded-xl border"
           style={{ borderColor: "var(--accent-200)", background: "var(--surface)" }}
           placeholder="you@example.com"
         />
+        {fieldErrors.email && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+        )}
       </div>
 
       <div>
@@ -88,12 +121,16 @@ export default function SignUpForm() {
         <input
           type="password"
           value={password}
+          name="password"
           onChange={(e) => setPassword(e.target.value)}
           required
           className="mt-1 w-full px-4 py-3 rounded-xl border"
           style={{ borderColor: "var(--accent-200)", background: "var(--surface)" }}
           placeholder="At least 6 characters"
         />
+        {fieldErrors.password && (
+          <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>
+        )}
       </div>
 
       <div>
@@ -103,6 +140,7 @@ export default function SignUpForm() {
         <input
           type="password"
           value={confirm}
+          name="confirm"
           onChange={(e) => setConfirm(e.target.value)}
           required
           className="mt-1 w-full px-4 py-3 rounded-xl border"
@@ -116,7 +154,10 @@ export default function SignUpForm() {
           type="submit"
           disabled={loading}
           className="w-full py-3 rounded-2xl font-medium"
-          style={{ background: "var(--accent)", color: "var(--accent-contrast)" }}
+          style={{
+            background: "var(--accent)",
+            color: "var(--accent-contrast)",
+          }}
         >
           {loading ? "Creating account..." : "Create account"}
         </button>
