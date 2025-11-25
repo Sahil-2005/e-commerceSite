@@ -20,7 +20,7 @@ export default function SignInPage() {
       <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <img
-            src="/mnt/data/e7983348-efb7-48df-94c3-9a0cf665c463.png"
+            src="/log-in.png"
             alt="logo"
             className="w-12 h-12 rounded-md object-cover"
           />

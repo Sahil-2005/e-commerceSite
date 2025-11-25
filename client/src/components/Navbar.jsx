@@ -10,7 +10,11 @@ export default function Navbar({ showAuthButtons = false }) {
           className="text-xl font-semibold"
           style={{ color: "var(--primary-900)" }}
         >
-          YourBrand
+          <img
+            src="/shopping.png"
+            alt="logo"
+            className="w-12 h-12 rounded-md object-cover"
+          />  
         </div>
 
         {/* Desktop Navigation */}
