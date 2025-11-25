@@ -1,0 +1,63 @@
+# -------------------------
+# Global
+# -------------------------
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+*.env
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build outputs (general)
+dist/
+build/
+
+# -------------------------
+# Client (React)
+# -------------------------
+client/build/
+client/.env
+client/.cache/
+client/.next/   # If using Next.js instead of CRA
+client/.turbo/
+
+# React testing coverage
+client/coverage/
+
+# -------------------------
+# Server (Node/Express)
+# -------------------------
+server/dist/
+server/build/
+server/.env
+server/coverage/
+
+# PM2 logs
+server/pids/
+server/logs/
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript
+*.tsbuildinfo
+
+
+client/node_modules
+server/node_modules
