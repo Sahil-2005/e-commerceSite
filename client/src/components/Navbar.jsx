@@ -1,90 +1,115 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar({ showAuthButtons = false }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobileMenuOpen && !event.target.closest('header')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isMobileMenuOpen]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleNavClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
-    <header className="w-full py-6 border-b-2 border-gray-400 border-solid">
-      <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
+    <header className="w-full py-4 md:py-6 border-b-2 border-gray-200 border-solid sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 flex items-center justify-between">
 
         {/* Brand Logo */}
-        <div
-          className="text-xl font-semibold"
-          style={{ color: "var(--primary-900)" }}
+        <Link
+          to="/"
+          className="flex items-center gap-2 transition-transform hover:scale-105"
+          onClick={handleNavClick}
         >
           <img
             src="/shopping.png"
             alt="logo"
-            className="w-12 h-12 rounded-md object-cover"
-          />  
-        </div>
+            className="w-10 h-10 md:w-12 md:h-12 rounded-md object-cover"
+          />
+          <span
+            className="text-lg md:text-xl font-bold hidden sm:block"
+            style={{ color: "var(--primary-900)" }}
+          >
+            YourBrand
+          </span>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <a
-            href="/"
-            className="text-sm transition-opacity hover:opacity-70"
+          <Link
+            to="/"
+            className="text-sm font-medium transition-all duration-200 hover:opacity-70 relative group"
             style={{ color: "var(--primary-800)" }}
           >
             Home
-          </a>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-current transition-all duration-200 group-hover:w-full"></span>
+          </Link>
 
-          <a
-            href="/shop"
-            className="text-sm transition-opacity hover:opacity-70"
+          <Link
+            to="/shop"
+            className="text-sm font-medium transition-all duration-200 hover:opacity-70 relative group"
             style={{ color: "var(--primary-800)" }}
           >
             Shop
-          </a>
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-current transition-all duration-200 group-hover:w-full"></span>
+          </Link>
 
           <a
-            href="#about"
-            className="text-sm transition-opacity hover:opacity-70"
+            href="/#about"
+            className="text-sm font-medium transition-all duration-200 hover:opacity-70 relative group"
             style={{ color: "var(--primary-800)" }}
+            onClick={handleNavClick}
           >
             About
-          </a>
-
-          <a
-            href="/contact"
-            className="text-sm transition-opacity hover:opacity-70"
-            style={{ color: "var(--primary-800)" }}
-          >
-            Contact
+            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-current transition-all duration-200 group-hover:w-full"></span>
           </a>
 
           {/* 🔥 AUTH SECTION */}
           {showAuthButtons ? (
             /* Show LOGIN + SIGNUP */
             <div className="flex items-center gap-3 ml-4">
-              <a
-                href="/signin"
-                className="px-4 py-2 rounded-xl border"
+              <Link
+                to="/signin"
+                className="px-4 py-2 rounded-xl border transition-all duration-200 hover:shadow-md hover:scale-105"
                 style={{
                   borderColor: "var(--accent-200)",
                   color: "var(--primary-800)",
                 }}
               >
                 Login
-              </a>
+              </Link>
 
-              <a
-                href="/signup"
-                className="px-4 py-2 rounded-xl font-medium"
+              <Link
+                to="/signup"
+                className="px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:shadow-md hover:scale-105"
                 style={{
                   background: "var(--accent)",
                   color: "var(--accent-contrast)",
                 }}
               >
                 Sign Up
-              </a>
+              </Link>
             </div>
           ) : (
             /* Show LOGOUT */
             <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                window.location.href = "/";
-              }}
-              className="px-4 py-2 rounded-xl font-medium ml-4"
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-xl font-medium ml-4 transition-all duration-200 hover:shadow-md hover:scale-105"
               style={{
                 background: "var(--accent-300)",
                 color: "var(--primary-900)",
@@ -95,24 +120,110 @@ export default function Navbar({ showAuthButtons = false }) {
           )}
         </nav>
 
-        {/* Mobile Menu Icon */}
+        {/* Mobile Menu Button */}
         <button
-          className="md:hidden flex items-center justify-center h-8 w-8 rounded-lg"
-          style={{ background: "var(--accent-300)" }}
-          onClick={() => alert("Mobile menu not implemented yet")}
+          className="md:hidden flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 hover:bg-gray-100"
+          style={{ background: isMobileMenuOpen ? "var(--accent-300)" : "var(--accent-200)" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsMobileMenuOpen(!isMobileMenuOpen);
+          }}
+          aria-label="Toggle menu"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth="2"
-            stroke="var(--primary-900)"
-            className="w-5 h-5"
-          >
-            <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
-          </svg>
+          {isMobileMenuOpen ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2.5"
+              stroke="var(--primary-900)"
+              className="w-6 h-6"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2.5"
+              stroke="var(--primary-900)"
+              className="w-6 h-6"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          )}
         </button>
       </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-200 bg-white animate-slideDown">
+          <nav className="flex flex-col py-4 px-4 space-y-3">
+            <Link
+              to="/"
+              className="text-sm font-medium py-2 px-4 rounded-lg transition-colors hover:bg-gray-50"
+              style={{ color: "var(--primary-800)" }}
+              onClick={handleNavClick}
+            >
+              Home
+            </Link>
+            <Link
+              to="/shop"
+              className="text-sm font-medium py-2 px-4 rounded-lg transition-colors hover:bg-gray-50"
+              style={{ color: "var(--primary-800)" }}
+              onClick={handleNavClick}
+            >
+              Shop
+            </Link>
+            <a
+              href="/#about"
+              className="text-sm font-medium py-2 px-4 rounded-lg transition-colors hover:bg-gray-50"
+              style={{ color: "var(--primary-800)" }}
+              onClick={handleNavClick}
+            >
+              About
+            </a>
+            {showAuthButtons ? (
+              <>
+                <Link
+                  to="/signin"
+                  className="text-sm font-medium py-2 px-4 rounded-lg border text-center transition-colors hover:bg-gray-50"
+                  style={{
+                    borderColor: "var(--accent-200)",
+                    color: "var(--primary-800)",
+                  }}
+                  onClick={handleNavClick}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="text-sm font-medium py-2 px-4 rounded-lg text-center transition-colors"
+                  style={{
+                    background: "var(--accent)",
+                    color: "var(--accent-contrast)",
+                  }}
+                  onClick={handleNavClick}
+                >
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              <button
+                onClick={handleLogout}
+                className="text-sm font-medium py-2 px-4 rounded-lg text-center transition-colors"
+                style={{
+                  background: "var(--accent-300)",
+                  color: "var(--primary-900)",
+                }}
+              >
+                Logout
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

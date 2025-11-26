@@ -38,7 +38,7 @@ export default function SignUpPage() {
 
         <div className="mt-6 text-sm text-center" style={{ color: "var(--muted)" }}>
           Already have an account?{" "}
-          <a href="/signin" style={{ color: "var(--accent)" }} className="font-medium">
+          <a href="/signin" style={{ color: "var(--accent)" }} className="font-medium hover:underline transition-all">
             Sign in
           </a>
         </div>

@@ -3,7 +3,6 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import SearchBar from "../components/SearchBar";
 import Filter from "../components/Filter";
-import SearchButton from "../components/SearchButton";
 import ProductCard from "../components/ProductCard";
 import Footer from "../components/Footer";
 
@@ -36,17 +35,20 @@ export default function DisplayProducts() {
     loadProducts();
   }, []);
 
-  // Search + filter logic
-  function applySearchAndFilter() {
-    setLoading(true);
+  // Real-time search and filter effect
+  useEffect(() => {
+    if (allProducts.length === 0) return;
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       let out = [...allProducts];
 
       // Search (case-insensitive)
       const q = query.trim().toLowerCase();
       if (q !== "") {
-        out = out.filter((p) => p.name.toLowerCase().includes(q));
+        out = out.filter((p) => 
+          p.name.toLowerCase().includes(q) ||
+          (p.shortDescription && p.shortDescription.toLowerCase().includes(q))
+        );
       }
 
       // Sorting
@@ -57,9 +59,10 @@ export default function DisplayProducts() {
       }
 
       setResults(out);
-      setLoading(false);
-    }, 200);
-  }
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [query, filter, allProducts]);
 
   return (
     <div
@@ -92,31 +95,53 @@ export default function DisplayProducts() {
             <SearchBar
               value={query}
               onChange={(v) => setQuery(v)}
-              placeholder="Search product name..."
+              placeholder="Search products..."
+              onClear={() => setQuery("")}
             />
           </div>
 
           <div className="w-full md:w-60">
             <Filter value={filter} onChange={(v) => setFilter(v)} />
           </div>
-
-          <div>
-            <SearchButton onClick={applySearchAndFilter} loading={loading} />
-          </div>
         </div>
 
         {/* Results */}
         <div>
-          {loading ? (
-            <div className="text-sm" style={{ color: "var(--muted)" }}>
-              Loading...
+          {loading && allProducts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-12 h-12 border-4 border-gray-300 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                Loading products...
+              </p>
             </div>
           ) : results.length === 0 ? (
-            <div className="text-sm" style={{ color: "var(--muted)" }}>
-              No products found.
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                style={{ color: "var(--muted)" }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-lg font-medium mb-2" style={{ color: "var(--primary-900)" }}>
+                No products found
+              </p>
+              <p className="text-sm max-w-md" style={{ color: "var(--muted)" }}>
+                {query.trim() 
+                  ? `No products match "${query}". Try adjusting your search or filter.`
+                  : "No products available at the moment. Check back later!"}
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {results.map((p) => (
                 <ProductCard key={p._id} product={p} />
               ))}

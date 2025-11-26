@@ -37,8 +37,8 @@ export default function SignInPage() {
         <SignInForm />
 
         <div className="mt-6 text-sm text-center" style={{ color: "var(--muted)" }}>
-          Don’t have an account?{" "}
-          <a href="/signup" style={{ color: "var(--accent)" }} className="font-medium">
+          Don't have an account?{" "}
+          <a href="/signup" style={{ color: "var(--accent)" }} className="font-medium hover:underline transition-all">
             Create one
           </a>
         </div>
