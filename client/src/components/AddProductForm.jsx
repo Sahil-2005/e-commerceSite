@@ -14,7 +14,7 @@ export default function AddProductForm({ initialData = null, onAdd, onUpdate, on
   const [shortDescription, setShortDescription] = useState("");
   const [price, setPrice] = useState("");
   const [imageFile, setImageFile] = useState(null); // file object
-  const [imagePreview, setImagePreview] = useState(initialData?.image || "/mnt/data/e7983348-efb7-48df-94c3-9a0cf665c463.png");
+  const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -22,14 +22,24 @@ export default function AddProductForm({ initialData = null, onAdd, onUpdate, on
       setName(initialData.name || "");
       setShortDescription(initialData.shortDescription || "");
       setPrice(initialData.price ?? "");
-      setImagePreview(initialData.image || imagePreview);
+      // Set preview to existing image URL (from server)
+      if (initialData.image) {
+        // If image is a full URL or starts with /uploads, use it directly
+        const imageUrl = initialData.image.startsWith("http")
+          ? initialData.image
+          : `http://localhost:5000${initialData.image}`;
+        setImagePreview(imageUrl);
+      } else {
+        setImagePreview("");
+      }
+      setImageFile(null); // Reset file when editing
     } else {
       // reset if adding new
       setName("");
       setShortDescription("");
       setPrice("");
       setImageFile(null);
-      setImagePreview("/mnt/data/e7983348-efb7-48df-94c3-9a0cf665c463.png");
+      setImagePreview("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData]);
@@ -62,22 +72,42 @@ export default function AddProductForm({ initialData = null, onAdd, onUpdate, on
     setErrors({});
 
     try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("shortDescription", shortDescription.trim());
+      formData.append("price", Number(price));
+
+      // Handle image file
+      if (imageFile) {
+        formData.append("image", imageFile);
+      } else if (!initialData) {
+        // New product must have an image
+        setErrors({ image: "Please upload an image file" });
+        setSaving(false);
+        return;
+      }
+      // If editing without new file, image won't be updated (backend handles this)
+
+      // Create payload object for parent component
       const payload = {
         id: initialData?.id || undefined,
         _id: initialData?._id || undefined,
         name: name.trim(),
         shortDescription: shortDescription.trim(),
         price: Number(price),
-        image: imagePreview,
+        image: imagePreview, // Keep for preview purposes
+        formData: formData, // Pass FormData to parent
       };
 
       if (initialData) {
-        onUpdate && (await onUpdate({ ...initialData, ...payload }));
+        onUpdate && (await onUpdate(payload));
       } else {
         onAdd && (await onAdd(payload));
       }
     } catch (err) {
       console.error("Form submission error:", err);
+      setErrors({ submit: err.message || "Failed to save product" });
     } finally {
       setSaving(false);
     }

@@ -1,10 +1,14 @@
 import React from "react";
+import { useNavigate, Link } from "react-router-dom";
 import SignUpForm from "../components/SignUpForm";
+import Navbar from "../components/Navbar";
 
 export default function SignUpPage() {
+  const navigate = useNavigate();
+
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-6 py-12"
+      className="min-h-screen flex flex-col"
       style={{
         "--primary-900": "#1f2937",
         "--primary-800": "#374151",
@@ -17,7 +21,9 @@ export default function SignUpPage() {
         "--surface": "#ffffff",
       }}
     >
-      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm">
+      <Navbar />
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-sm">
         <div className="flex items-center gap-3 mb-6">
           <img
             src="/user.png"
@@ -38,10 +44,11 @@ export default function SignUpPage() {
 
         <div className="mt-6 text-sm text-center" style={{ color: "var(--muted)" }}>
           Already have an account?{" "}
-          <a href="/signin" style={{ color: "var(--accent)" }} className="font-medium hover:underline transition-all">
+          <Link to="/signin" style={{ color: "var(--accent)" }} className="font-medium hover:underline transition-all">
             Sign in
-          </a>
+          </Link>
         </div>
+      </div>
       </div>
     </div>
   );

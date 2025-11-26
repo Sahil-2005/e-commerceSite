@@ -24,6 +24,20 @@ export default function CrudProducts() {
     setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
   }
 
+  // Helper function to ensure image URLs are properly formatted
+  const processProductImages = (products) => {
+    return products.map((p) => ({
+      ...p,
+      image: p.image
+        ? p.image.startsWith("http://") || p.image.startsWith("https://")
+          ? p.image
+          : p.image.startsWith("/uploads")
+          ? `http://localhost:5000${p.image}`
+          : `http://localhost:5000/uploads/${p.image}`
+        : "",
+    }));
+  };
+
   // Fetch products from backend
   useEffect(() => {
     async function loadProducts() {
@@ -31,10 +45,16 @@ export default function CrudProducts() {
         setLoading(true);
         setError("");
         const res = await axios.get(API);
-        setProducts(res.data);
+        // Handle both old format (array) and new format (object with products array)
+        const productsData = res.data.products || res.data;
+        const productsArray = Array.isArray(productsData) ? productsData : [];
+        // Process image URLs to ensure they're absolute
+        const processedProducts = processProductImages(productsArray);
+        setProducts(processedProducts);
       } catch (err) {
         console.error("Error loading products:", err);
         setError("Failed to load products. Please refresh the page.");
+        showNotification("Failed to load products", "error");
       } finally {
         setLoading(false);
       }
@@ -46,15 +66,38 @@ export default function CrudProducts() {
   async function handleAdd(product) {
     try {
       setError("");
-      const res = await axios.post(API, product);
-      setProducts((prev) => [res.data, ...prev]);
+      
+      // Use FormData if available, otherwise fallback to JSON
+      const formData = product.formData || product;
+      const isFormData = formData instanceof FormData;
+      
+      const res = await axios.post(API, formData, {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+      });
+      
+      const newProduct = res.data.product || res.data;
+      // Process image URL for new product
+      const processedProduct = processProductImages([newProduct])[0];
+      setProducts((prev) => [processedProduct, ...prev]);
       setFormOpen(false);
       setEditingProduct(null);
       showNotification("Product added successfully!", "success");
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "Failed to add product";
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Failed to add product";
+      const errors = err.response?.data?.errors || {};
+      
       setError(errorMsg);
       showNotification(errorMsg, "error");
+      
+      // Log validation errors
+      if (Object.keys(errors).length > 0) {
+        console.error("Validation errors:", errors);
+      }
     }
   }
 
@@ -62,17 +105,48 @@ export default function CrudProducts() {
   async function handleUpdate(product) {
     try {
       setError("");
-      const res = await axios.put(`${API}/${product._id}`, product);
+      
+      // Use FormData if available, otherwise fallback to JSON
+      const formData = product.formData || product;
+      const isFormData = formData instanceof FormData;
+      
+      // If FormData, append the product ID to it
+      if (isFormData && product._id) {
+        // FormData already has the fields, just need to send it
+      } else if (!isFormData && product._id) {
+        // For JSON, use the product object directly
+      }
+      
+      const productId = product._id || product.id;
+      const res = await axios.put(`${API}/${productId}`, formData, {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+      });
+      
+      const updatedProduct = res.data.product || res.data;
+      // Process image URL for updated product
+      const processedProduct = processProductImages([updatedProduct])[0];
       setProducts((prev) =>
-        prev.map((p) => (p._id === product._id ? res.data : p))
+        prev.map((p) => (p._id === productId ? processedProduct : p))
       );
       setFormOpen(false);
       setEditingProduct(null);
       showNotification("Product updated successfully!", "success");
     } catch (err) {
-      const errorMsg = err.response?.data?.message || "Failed to update product";
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Failed to update product";
+      const errors = err.response?.data?.errors || {};
+      
       setError(errorMsg);
       showNotification(errorMsg, "error");
+      
+      // Log validation errors
+      if (Object.keys(errors).length > 0) {
+        console.error("Validation errors:", errors);
+      }
     }
   }
 
@@ -112,7 +186,7 @@ export default function CrudProducts() {
         "--surface": "#ffffff",
       }}
     >
-      <Navbar showAuthButtons={false} />
+      <Navbar />
 
       {/* Notification Toast */}
       {notification.show && (
@@ -330,7 +404,7 @@ export default function CrudProducts() {
 
 //   return (
 //     <div className="min-h-screen py-12">
-//       <Navbar showAuthButtons={false} />
+//       <Navbar />
 
 //       <div className="max-w-6xl mx-auto px-6">
 //         <div className="flex items-center justify-between mb-8 pt-[3%]">

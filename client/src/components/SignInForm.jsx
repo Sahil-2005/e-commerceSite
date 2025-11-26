@@ -28,8 +28,11 @@ export default function SignInForm() {
       // set axios default header and store token in localStorage
       setAuthToken(token);
 
-      // redirect to protected page (e.g. shop)
-      window.location.href = "/shop";
+      // Dispatch custom event for navbar to update
+      window.dispatchEvent(new Event("authChange"));
+
+      // redirect to protected page (e.g. shop) using React Router
+      window.location.href = "/shop"; // Using window.location to ensure full page refresh and auth check
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || err.message || "Login failed");

@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { getStoredToken, setAuthToken } from "../services/auth";
 
-export default function Navbar({ showAuthButtons = false }) {
+export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = getStoredToken();
+      setIsAuthenticated(!!token);
+    };
+
+    // Check on mount and when location changes
+    checkAuth();
+
+    // Listen for storage changes (e.g., login/logout in another tab)
+    window.addEventListener("storage", checkAuth);
+    
+    // Custom event for login/logout in same tab
+    window.addEventListener("authChange", checkAuth);
+
+    return () => {
+      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("authChange", checkAuth);
+    };
+  }, [location]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -17,7 +42,10 @@ export default function Navbar({ showAuthButtons = false }) {
   }, [isMobileMenuOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    setAuthToken(null); // This removes token from localStorage and axios headers
+    setIsAuthenticated(false);
+    // Dispatch custom event for other components
+    window.dispatchEvent(new Event("authChange"));
     navigate("/");
     setIsMobileMenuOpen(false);
   };
@@ -25,6 +53,13 @@ export default function Navbar({ showAuthButtons = false }) {
   const handleNavClick = () => {
     setIsMobileMenuOpen(false);
   };
+
+  // Don't show auth buttons on signin/signup pages
+  const isAuthPage = location.pathname === "/signin" || location.pathname === "/signup";
+  // Show auth buttons only if: not authenticated AND not on auth pages
+  const showAuthButtons = !isAuthenticated && !isAuthPage;
+  // Show logout only if: authenticated AND not on auth pages
+  const showLogout = isAuthenticated && !isAuthPage;
 
   return (
     <header className="w-full py-4 md:py-6 border-b-2 border-gray-200 border-solid sticky top-0 z-50 bg-white shadow-sm transition-all duration-300">
@@ -80,7 +115,7 @@ export default function Navbar({ showAuthButtons = false }) {
           </a>
 
           {/* 🔥 AUTH SECTION */}
-          {showAuthButtons ? (
+          {showAuthButtons && (
             /* Show LOGIN + SIGNUP */
             <div className="flex items-center gap-3 ml-4">
               <Link
@@ -105,7 +140,8 @@ export default function Navbar({ showAuthButtons = false }) {
                 Sign Up
               </Link>
             </div>
-          ) : (
+          )}
+          {showLogout && (
             /* Show LOGOUT */
             <button
               onClick={handleLogout}
@@ -184,7 +220,7 @@ export default function Navbar({ showAuthButtons = false }) {
             >
               About
             </a>
-            {showAuthButtons ? (
+            {showAuthButtons && (
               <>
                 <Link
                   to="/signin"
@@ -209,7 +245,8 @@ export default function Navbar({ showAuthButtons = false }) {
                   Sign Up
                 </Link>
               </>
-            ) : (
+            )}
+            {showLogout && (
               <button
                 onClick={handleLogout}
                 className="text-sm font-medium py-2 px-4 rounded-lg text-center transition-colors"

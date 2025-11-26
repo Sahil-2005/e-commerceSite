@@ -7,6 +7,21 @@ export default function DisplayProductSection({ products = [] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("name");
 
+  // Helper function to get proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    // If already a full URL, return as is
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath;
+    }
+    // If starts with /uploads, prepend backend URL
+    if (imagePath.startsWith("/uploads")) {
+      return `http://localhost:5000${imagePath}`;
+    }
+    // Otherwise, assume it's a relative path and prepend /uploads
+    return `http://localhost:5000/uploads/${imagePath}`;
+  };
+
   const filteredProducts = products
     .filter((p) =>
       p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -21,8 +36,11 @@ export default function DisplayProductSection({ products = [] }) {
         return b.price - a.price;
       }
       return 0;
-    });
-
+    })
+    .map((p) => ({
+      ...p,
+      image: getImageUrl(p.image), // Ensure image URL is properly formatted
+    }));
   return (
     <div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
@@ -143,14 +161,33 @@ export default function DisplayProductSection({ products = [] }) {
               style={{ background: "var(--surface)" }}
             >
               <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="object-contain h-full w-full p-2"
-                  onError={(e) => {
-                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23ddd' width='100' height='100'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='50' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
-                  }}
-                />
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="object-contain h-full w-full p-2"
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23ddd' width='100' height='100'/%3E%3Ctext fill='%23999' font-family='sans-serif' font-size='50' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3E?%3C/text%3E%3C/svg%3E";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-8 w-8"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-w-0">

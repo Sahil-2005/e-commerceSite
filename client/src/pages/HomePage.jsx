@@ -1,12 +1,15 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import HeroSection from "../components/HeroSection";
 import AboutUs from "../components/AboutUs";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
   function handleShopClick() {
-    window.location.href = "/shop";
+    navigate("/shop");
   }
 
   return (
@@ -24,11 +27,8 @@ export default function HomePage() {
         "--surface": "#ffffff",
       }}
     >
-   
-      
-
       <main className="flex-1">
-      <Navbar showAuthButtons={true} />
+        <Navbar />
 
         <HeroSection onShopClick={handleShopClick} />
 

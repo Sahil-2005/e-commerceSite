@@ -23,8 +23,22 @@ export default function DisplayProducts() {
       try {
         setLoading(true);
         const res = await axios.get(API);
-        setAllProducts(res.data);
-        setResults(res.data); // initial display
+        // Handle both old format (array) and new format (object with products array)
+        const productsData = res.data.products || res.data;
+        const products = Array.isArray(productsData) ? productsData : [];
+        
+        // Ensure image URLs are absolute
+        const productsWithUrls = products.map((p) => ({
+          ...p,
+          image: p.image?.startsWith("http")
+            ? p.image
+            : p.image?.startsWith("/")
+            ? `http://localhost:5000${p.image}`
+            : p.image,
+        }));
+        
+        setAllProducts(productsWithUrls);
+        setResults(productsWithUrls); // initial display
       } catch (err) {
         console.error("Error loading products:", err);
       } finally {
@@ -79,7 +93,7 @@ export default function DisplayProducts() {
         "--surface": "#ffffff",
       }}
     >
-      <Navbar showAuthButtons={false} />
+      <Navbar />
 
       <div className="max-w-6xl mx-auto px-6">
         <h1
